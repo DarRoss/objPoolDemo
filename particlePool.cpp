@@ -4,7 +4,7 @@
  * Constructor.
  * Param size: the length of the array.
  */
-ParticlePool::ParticlePool(int size) : particles_(size_t(size))
+ParticlePool::ParticlePool(int size) : particles_(size_t(size)), clock_(0)
 {
 	poolSize_ = size;
 
@@ -27,6 +27,7 @@ ParticlePool::ParticlePool(int size) : particles_(size_t(size))
  * Param y: the y coordinate of the particle. 
  * Param xVel: the horizontal velocity of the particle. 
  * Param yVel: the vertical velocity of the particle. 
+ * Param lifetime: the number of frames the particle will last. 
  */
 void ParticlePool::create(double x, double y, double xVel, double yVel, int lifetime)
 {
@@ -36,7 +37,7 @@ void ParticlePool::create(double x, double y, double xVel, double yVel, int life
 	if (firstAvailable_ == nullptr)
 	{
 		// kill the oldest living particle to use as the new particle
-		newParticle = queue_.front();
+		newParticle = queue_.front().particlePtr;
 		queue_.pop_front();
 	}
 	// else there is an available particle
@@ -50,13 +51,16 @@ void ParticlePool::create(double x, double y, double xVel, double yVel, int life
 
 	// bring the new particle to life
 	newParticle->init(x, y, xVel, yVel, lifetime);
+
 	// add this particle to the living queue
-	queue_.push_back(newParticle);
+	queueInsert(newParticle, clock_ + lifetime);
+	
 }
 
 /* 
  * Move particles one by one. 
  * Add particles to the availablility list upon death. 
+ * Called once per update/frame.
  */
 void ParticlePool::animate()
 {
@@ -70,13 +74,13 @@ void ParticlePool::animate()
 			particles_[i].setNext(firstAvailable_);
 			firstAvailable_ = &particles_[i];
 
-			// assume that we have taken the oldest particle
-			assert(firstAvailable_ == queue_.front());
-
 			// remove this particle from the living queue
 			queue_.pop_front();
 		}
 	}
+
+	// increment internal clock (assuming that animate() runs once per frame)
+	++clock_;
 }
 
 /*
@@ -118,5 +122,18 @@ Particle* ParticlePool::getFirstAvailable()
  */
 Particle* ParticlePool::getOldestAlive()
 {
-	return queue_.front();
+	return queue_.front().particlePtr;
+}
+
+/*
+ * Insert the particle to the living queue. 
+ * Param particle: the particle to insert. 
+ * Param expiry: the expiration time of the particle.
+ */
+void ParticlePool::queueInsert(Particle* particle, unsigned long expiry)
+{
+	// create a queueItem consisting of parameters
+	queueItem item = queueItem(particle, expiry);
+	// perform a sorted insert to the living queue
+	queue_.insert(std::upper_bound(queue_.begin(), queue_.end(), item), item);
 }
