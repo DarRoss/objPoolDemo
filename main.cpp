@@ -46,8 +46,7 @@ public:
 			if (GetMouse(0).bHeld)
 			{
 				// create particle at cursor with random velocity
-				pool_->create(GetMouseX(), GetMouseY(), (float)rand()/(float)(RAND_MAX/4) - 2, (float)rand()/(float)(RAND_MAX/4) - 2, rand() % 100 + 150);
-				// (particle life time: 150 to 250)
+				pool_->create(GetMouseX(), GetMouseY(), (float)rand()/(float)(RAND_MAX/4) - 2, (float)rand()/(float)(RAND_MAX/4) - 2, LIFE_TIME);
 			}
 		}
 
@@ -98,6 +97,7 @@ private:
 	static const int POOL_SIZE = 64;
 	static const int BALL_RADIUS = 3;
 	static constexpr float TGT_FRAME_TIME = 1.0f / 60.0f; // Virtual FPS of 60fps
+	static const int LIFE_TIME = 200;
 	ParticlePool* pool_;
 	Particle* tempParticle_;
 	int divSize_;
