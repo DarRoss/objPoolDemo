@@ -1,66 +1,37 @@
 #include "particle.h"
 
-Particle::Particle() : framesLeft_(0)
-{}
-
-bool Particle::animate()
+void Particle::update()
 {
-	bool output = false;
-
-	if (inUse()) 
-	{
-		framesLeft_--;
-		state_.live.x += state_.live.xVel;
-		state_.live.y += state_.live.yVel;
-
-		output = framesLeft_ == 0;
-	}
-
-	return output;
+	x_ += xVel_;
+	y_ += yVel_;
 }
 
-void Particle::init(double x, double y, double xVel, double yVel, int lifetime)
+void Particle::init(double x, double y, double xVel, double yVel)
 {
-	state_.live.x = x;
-	state_.live.y = y;
-	state_.live.xVel = xVel;
-	state_.live.yVel = yVel;
-	framesLeft_ = lifetime;
-}
-
-bool Particle::inUse() const
-{
-	return framesLeft_ > 0;
-}
-
-Particle* Particle::getNext()
-{
-	return state_.next;
-}
-
-void Particle::setNext(Particle* newParticle)
-{
-	state_.next = newParticle;
+	x_ = x;
+	y_ = y;
+	xVel_ = xVel;
+	yVel_ = yVel;
 }
 
 double Particle::getX()
 {
-	return state_.live.x;
+	return x_;
 }
 
 double Particle::getY()
 {
-	return state_.live.y;
+	return y_;
 }
 
 double Particle::getXVel()
 {
-	return state_.live.xVel;
+	return xVel_;
 }
 
 
 double Particle::getYVel()
 {
-	return state_.live.yVel;
+	return yVel_;
 }
 
