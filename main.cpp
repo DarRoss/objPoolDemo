@@ -1,6 +1,6 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-#include "particlePool.h"
+#include "poolManager.h"
 
 class Window : public olc::PixelGameEngine
 {
@@ -14,9 +14,9 @@ public:
 	bool OnUserCreate() override
 	{
 		// Called once at the start, so create things here
-		pool_ = new ParticlePool(POOL_SIZE);
+		poolMgr_ = new PoolManager(PTCL_LEN);
 		// measure length for equidistant divisions
-		divSize_ = ScreenWidth() / POOL_SIZE;
+		divSize_ = ScreenWidth() / PTCL_LEN;
 		fAccumulatedTime_ = 0;
 
 		return true;
@@ -38,16 +38,16 @@ public:
         	// Continue as normal
 
 		// processing
-		pool_->animate();
+		poolMgr_->update();
 
+		// check if the window is focused by the user
 		if (IsFocused())
 		{
 			// check if left mouse button is held down
 			if (GetMouse(0).bHeld)
 			{
 				// create particle at cursor with random velocity
-				pool_->create(GetMouseX(), GetMouseY(), (float)rand()/(float)(RAND_MAX/4) - 2, (float)rand()/(float)(RAND_MAX/4) - 2, rand() % 100 + 150);
-				// (particle life time: 150 to 250)
+				poolMgr_->createParticle(GetMouseX(), GetMouseY(), (float)rand()/(float)(RAND_MAX/4) - 2, (float)rand()/(float)(RAND_MAX/4) - 2, rand() % 100 + 150);
 			}
 		}
 
@@ -58,20 +58,20 @@ public:
 		FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::VERY_DARK_GREY);
 
 		// loop through all particles living or dead
-		for(int i = 0; i < POOL_SIZE; i++) 
+		for(int i = 0; i < PTCL_LEN; i++) 
 		{
 			// temporarily store this particle
-			tempParticle_ = pool_->getParticleAt(i);
+			tempParticle_ = poolMgr_->getParticleAt(i);
 
 			// check if particle is living
-			if (tempParticle_->inUse())
+			if (poolMgr_->getPtclUsageAt(i))
 			{
 				// draw the particle
 				FillCircle(tempParticle_->getX(), tempParticle_->getY(), BALL_RADIUS, olc::YELLOW);
 				// draw the indicator (green) for the particle
 				FillCircle(divSize_ * i + divSize_ / 2, BALL_RADIUS * 2, BALL_RADIUS, olc::GREEN);
 				// check if this is the oldest particle alive
-				if (tempParticle_ == pool_->getOldestAlive()) 
+				if (tempParticle_ == poolMgr_->getOldestLivingPtcl()) 
 				{
 					// draw the indicator (magenta) for the particle
 					DrawCircle(divSize_ * i + divSize_ / 2, BALL_RADIUS * 2, BALL_RADIUS, olc::BLUE);
@@ -83,7 +83,7 @@ public:
 				// draw the indicator (red) for the particle
 				FillCircle(divSize_ * i + divSize_ / 2, BALL_RADIUS * 2, BALL_RADIUS, olc::DARK_RED);
 				// check if this particle is the next to be used
-				if (tempParticle_ == pool_->getFirstAvailable())
+				if (tempParticle_ == poolMgr_->getFirstAvailablePtcl())
 				{
 					// highlight this indicator
 					DrawCircle(divSize_ * i + divSize_ / 2, BALL_RADIUS * 2, BALL_RADIUS, olc::YELLOW);
@@ -95,10 +95,10 @@ public:
 	}
 
 private:
-	static const int POOL_SIZE = 64;
+	static const int PTCL_LEN = 64;
 	static const int BALL_RADIUS = 3;
 	static constexpr float TGT_FRAME_TIME = 1.0f / 60.0f; // Virtual FPS of 60fps
-	ParticlePool* pool_;
+	PoolManager* poolMgr_;
 	Particle* tempParticle_;
 	int divSize_;
 	float fAccumulatedTime_;
